@@ -4,7 +4,7 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">SAT242516081</a>
+        <span class="navbar-brand mb-0 h1">IT TICKET MANAGEMENT SYSTEM</span>
     </div>
 </div>
 
@@ -34,12 +34,6 @@
                         </NavLink>
                     </div>
                 </AuthorizeView>
-
-                <div class="nav-item px-3 mt-4 border-top pt-2">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-circle me-2" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
 
                 <div class="nav-item px-3">
                     <form action="/Account/Logout" method="post">

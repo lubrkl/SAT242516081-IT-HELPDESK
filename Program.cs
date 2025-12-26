@@ -8,6 +8,7 @@ using Providers;
 using SAT242516081.Components;
 using System.Globalization;
 using UnitOfWorks;
+//using SAT242516081.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,10 @@ builder.Services.AddRazorComponents()
 // --- EKLENEN KISIM 1: Controller Servisi ---
 builder.Services.AddControllers();
 // ------------------------------------------
+
+// ===== HTTP CONTEXT ACCESSOR (Logger için gerekli) =====
+builder.Services.AddHttpContextAccessor();
+// ========================================================
 
 builder.Services.AddCascadingAuthenticationState();
 
@@ -52,7 +57,7 @@ builder.Services.AddDbContext<MyDbModel_DbContext>(options =>
 builder.Services.AddScoped<IMyDbModel_UnitOfWork, MyDbModel_UnitOfWork<MyDbModel_DbContext>>();
 builder.Services.AddScoped<IMyDbModel_Provider, MyDbModel_Provider>();
 
-// Services
+// Services (Logging)
 builder.Services.AddScoped<IDbLogger, DbLogger>();
 builder.Services.AddScoped<IFileLogger, FileLogger>();
 builder.Services.AddScoped<IReportService, ReportService>();
@@ -91,7 +96,7 @@ app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Rolleri otomatik oluþturma kodu (önceki adýmda eklemiþtik, aynen kalýyor)
+// Rolleri otomatik oluþturma kodu
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -106,4 +111,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-//aaaa

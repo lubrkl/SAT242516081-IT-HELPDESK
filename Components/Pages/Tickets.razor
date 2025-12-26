@@ -17,45 +17,63 @@
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
-    <div class="alert alert-danger">@errorMessage</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMessage
+        <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty"></button>
+    </div>
 }
 
 <div class="mb-3">
-    <button class="btn btn-primary" @onclick="ShowAddForm">+ @L["Add"]</button>
-    <button class="btn btn-secondary" @onclick="DownloadReport">@L["PdfReport"]</button>
+    <button class="btn btn-primary" @onclick="ShowAddForm" disabled="@isLoading">
+        <i class="bi bi-plus-circle"></i> @L["Add"]
+    </button>
+    <button class="btn btn-secondary" @onclick="DownloadReport" disabled="@(isLoading || !tickets.Any())">
+        <i class="bi bi-file-pdf"></i> @L["PdfReport"]
+    </button>
 </div>
 
 @if (showForm)
 {
-    <div class="card mb-3">
+    <div class="card mb-3 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">@(isEdit? L["Edit"] : L["Add"]) Ticket</h5>
+        </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-6 mb-2">
-                    <label>@L["Title"]</label>
-                    <input @bind="editItem.Title" class="form-control" />
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">@L["Title"] <span class="text-danger">*</span></label>
+                    <input @bind="editItem.Title" class="form-control" placeholder="Ticket başlığı girin..." />
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label>@L["Requester"]</label>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">@L["Requester"] <span class="text-danger">*</span></label>
                     <select @bind="editItem.RequesterId" class="form-control">
-                        <option value="0">@L["Select"]</option>
+                        <option value="0">-- @L["Select"] --</option>
                         @foreach (var e in employees)
                         {
                             <option value="@e.EmployeeId">@e.FullName</option>
                         }
                     </select>
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label>@L["AssignedTo"]</label>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">@L["AssignedTo"]</label>
                     <select @bind="editItem.AssignedToId" class="form-control">
-                        <option value="">@L["Select"]</option>
+                        <option value="0">-- @L["Select"] --</option>
                         @foreach (var e in employees)
                         {
                             <option value="@e.EmployeeId">@e.FullName</option>
                         }
                     </select>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label>@L["Priority"]</label>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">@L["Priority"]</label>
                     <select @bind="editItem.PriorityId" class="form-control">
                         @foreach (var p in priorities)
                         {
@@ -63,8 +81,8 @@
                         }
                     </select>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label>@L["Status"]</label>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">@L["Status"]</label>
                     <select @bind="editItem.StatusId" class="form-control">
                         @foreach (var s in statuses)
                         {
@@ -72,56 +90,107 @@
                         }
                     </select>
                 </div>
-                <div class="col-12 mb-2">
-                    <label>@L["Description"]</label>
-                    <textarea @bind="editItem.Description" class="form-control" rows="3"></textarea>
+                <div class="col-12 mb-3">
+                    <label class="form-label fw-bold">@L["Description"]</label>
+                    <textarea @bind="editItem.Description" class="form-control" rows="3" placeholder="Açıklama girin..."></textarea>
                 </div>
             </div>
-            <button class="btn btn-success" @onclick="SaveItem">@L["Save"]</button>
-            <button class="btn btn-secondary" @onclick="CancelForm">@L["Cancel"]</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-success" @onclick="SaveItem" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    <i class="bi bi-check-circle"></i> @L["Save"]
+                </button>
+                <button class="btn btn-secondary" @onclick="CancelForm" disabled="@isSaving">
+                    <i class="bi bi-x-circle"></i> @L["Cancel"]
+                </button>
+            </div>
         </div>
     </div>
 }
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>@L["Title"]</th>
-            <th>@L["Requester"]</th>
-            <th>@L["AssignedTo"]</th>
-            <th>@L["Priority"]</th>
-            <th>@L["Status"]</th>
-            <th>@L["Date"]</th>
-            <th>@L["Actions"]</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in tickets)
-        {
-            <tr>
-                <td>@item.TicketId</td>
-                <td>@item.Title</td>
-                <td>@item.RequesterName</td>
-                <td>@item.AssignedToName</td>
-                <td><span style="color:@item.PriorityColor">@item.PriorityName</span></td>
-                <td><span style="color:@item.StatusColor">@item.StatusName</span></td>
-                <td>@item.CreatedDate.ToString("dd.MM.yyyy")</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" @onclick="() => EditItem(item)">@L["Edit"]</button>
-                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteItem(item.TicketId)">@L["Delete"]</button>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@if (isLoading)
+{
+    <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+        <span class="ms-2">Veriler yükleniyor...</span>
+    </div>
+}
+else if (!tickets.Any())
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Henüz kayıtlı ticket bulunmamaktadır.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>@L["Title"]</th>
+                    <th>@L["Requester"]</th>
+                    <th>@L["AssignedTo"]</th>
+                    <th>@L["Priority"]</th>
+                    <th>@L["Status"]</th>
+                    <th>@L["Date"]</th>
+                    <th>@L["Actions"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in tickets)
+                {
+                    <tr>
+                        <td><strong>#@item.TicketId</strong></td>
+                        <td>@item.Title</td>
+                        <td>@item.RequesterName</td>
+                        <td>@(string.IsNullOrEmpty(item.AssignedToName) ? "-" : item.AssignedToName)</td>
+                        <td>
+                            <span class="badge" style="background-color:@item.PriorityColor">
+                                @item.PriorityName
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color:@item.StatusColor">
+                                @item.StatusName
+                            </span>
+                        </td>
+                        <td>@item.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-warning" @onclick="() => EditItem(item)" title="Düzenle">
+                                    <i class="bi bi-pencil"></i> @L["Edit"]
+                                </button>
+                                <button class="btn btn-danger" @onclick="() => DeleteItem(item.TicketId)" title="Sil">
+                                    <i class="bi bi-trash"></i> @L["Delete"]
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-muted">
+        <small>Toplam: <strong>@tickets.Count</strong> kayıt</small>
+    </div>
+}
 
 @code {
     private List<Ticket> tickets = new();
     private Ticket editItem = new();
     private bool showForm = false;
     private bool isEdit = false;
+    private bool isLoading = true;
+    private bool isSaving = false;
     private string errorMessage = "";
+    private string successMessage = "";
 
     private List<Employee> employees = new();
     private List<Priority> priorities = new();
@@ -129,8 +198,23 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadLookups();
-        await LoadData();
+        await LoadAll();
+    }
+
+    private async Task LoadAll()
+    {
+        isLoading = true;
+        errorMessage = "";
+
+        try
+        {
+            await LoadLookups();
+            await LoadData();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private async Task LoadLookups()
@@ -143,7 +227,8 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Lookup hatası: {ex.Message}";
+            errorMessage = $"Lookup verileri yüklenirken hata oluştu: {ex.Message}";
+            Console.WriteLine($"LoadLookups HATA: {ex}");
         }
     }
 
@@ -152,31 +237,38 @@
         try
         {
             tickets = (await Provider.GetItems<Ticket>("sp_Tickets_Get")).ToList();
-            Console.WriteLine($"Tickets yüklendi: {tickets.Count} adet");
         }
         catch (Exception ex)
         {
-            errorMessage = $"Veri çekme hatası: {ex.Message}";
-            Console.WriteLine($"HATA: {ex.Message}");
+            errorMessage = $"Ticket verileri yüklenirken hata oluştu: {ex.Message}";
+            Console.WriteLine($"LoadData HATA: {ex}");
         }
     }
 
     private void ShowAddForm()
     {
-        editItem = new Ticket { PriorityId = 1, StatusId = 1 };
+        ClearMessages();
+        editItem = new Ticket
+        {
+            PriorityId = priorities.FirstOrDefault()?.PriorityId ?? 1,
+            StatusId = statuses.FirstOrDefault()?.StatusId ?? 1,
+            RequesterId = 0,
+            AssignedToId = 0
+        };
         isEdit = false;
         showForm = true;
     }
 
     private void EditItem(Ticket item)
     {
+        ClearMessages();
         editItem = new Ticket
         {
             TicketId = item.TicketId,
             Title = item.Title,
             Description = item.Description,
             RequesterId = item.RequesterId,
-            AssignedToId = item.AssignedToId,
+            AssignedToId = item.AssignedToId ?? 0,
             PriorityId = item.PriorityId,
             StatusId = item.StatusId
         };
@@ -186,43 +278,123 @@
 
     private async Task SaveItem()
     {
-        if (isEdit)
+        ClearMessages();
+
+        // Validasyon kontrolleri
+        if (string.IsNullOrWhiteSpace(editItem.Title))
         {
-            await Provider.SetItems<Ticket>("sp_Tickets_Update",
-                ("TicketId", editItem.TicketId),
-                ("Title", editItem.Title),
-                ("Description", editItem.Description ?? ""),
-                ("RequesterId", editItem.RequesterId),
-                ("AssignedToId", editItem.AssignedToId ?? (object)DBNull.Value),
-                ("PriorityId", editItem.PriorityId),
-                ("StatusId", editItem.StatusId));
+            errorMessage = "Başlık alanı zorunludur!";
+            return;
         }
-        else
+
+        if (editItem.Title.Length < 3)
         {
-            await Provider.SetItems<Ticket>("sp_Tickets_Insert",
-                ("Title", editItem.Title),
-                ("Description", editItem.Description ?? ""),
-                ("RequesterId", editItem.RequesterId),
-                ("AssignedToId", editItem.AssignedToId ?? (object)DBNull.Value),
-                ("PriorityId", editItem.PriorityId),
-                ("StatusId", editItem.StatusId));
+            errorMessage = "Başlık en az 3 karakter olmalıdır!";
+            return;
         }
-        showForm = false;
-        await LoadData();
+
+        if (editItem.RequesterId == 0)
+        {
+            errorMessage = "Lütfen bir talep eden seçin!";
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            object assignedToValue = editItem.AssignedToId > 0
+                ? editItem.AssignedToId
+                : DBNull.Value;
+
+            if (isEdit)
+            {
+                await Provider.SetItems<Ticket>("sp_Tickets_Update",
+                    ("TicketId", editItem.TicketId),
+                    ("Title", editItem.Title.Trim()),
+                    ("Description", editItem.Description?.Trim() ?? ""),
+                    ("RequesterId", editItem.RequesterId),
+                    ("AssignedToId", assignedToValue),
+                    ("PriorityId", editItem.PriorityId),
+                    ("StatusId", editItem.StatusId));
+
+                successMessage = "Ticket başarıyla güncellendi!";
+            }
+            else
+            {
+                await Provider.SetItems<Ticket>("sp_Tickets_Insert",
+                    ("Title", editItem.Title.Trim()),
+                    ("Description", editItem.Description?.Trim() ?? ""),
+                    ("RequesterId", editItem.RequesterId),
+                    ("AssignedToId", assignedToValue),
+                    ("PriorityId", editItem.PriorityId),
+                    ("StatusId", editItem.StatusId));
+
+                successMessage = "Ticket başarıyla eklendi!";
+            }
+
+            showForm = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Kaydetme sırasında hata oluştu: {ex.Message}";
+            Console.WriteLine($"SaveItem HATA: {ex}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
     }
 
     private async Task DeleteItem(int id)
     {
-        await Provider.SetItems<Ticket>("sp_Tickets_Delete", ("TicketId", id));
-        await LoadData();
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Bu ticket'ı silmek istediğinize emin misiniz?");
+
+        if (!confirmed) return;
+
+        ClearMessages();
+
+        try
+        {
+            await Provider.SetItems<Ticket>("sp_Tickets_Delete", ("TicketId", id));
+            successMessage = "Ticket başarıyla silindi!";
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Silme sırasında hata oluştu: {ex.Message}";
+            Console.WriteLine($"DeleteItem HATA: {ex}");
+        }
     }
 
-    private void CancelForm() => showForm = false;
+    private void CancelForm()
+    {
+        showForm = false;
+        ClearMessages();
+    }
+
+    private void ClearMessages()
+    {
+        errorMessage = "";
+        successMessage = "";
+    }
 
     private async Task DownloadReport()
     {
-        var pdf = ReportService.GenerateTicketReport(tickets);
-        var fileName = $"Tickets_{DateTime.Now:yyyyMMdd}.pdf";
-        await JS.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(pdf));
+        ClearMessages();
+
+        try
+        {
+            var pdf = ReportService.GenerateTicketReport(tickets);
+            var fileName = $"Tickets_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            await JS.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(pdf));
+            successMessage = "Rapor başarıyla indirildi!";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Rapor oluşturulurken hata oluştu: {ex.Message}";
+            Console.WriteLine($"DownloadReport HATA: {ex}");
+        }
     }
-}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+}

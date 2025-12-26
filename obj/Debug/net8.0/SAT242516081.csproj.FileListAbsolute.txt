@@ -205,3 +205,4 @@ C:\Users\ASUS\Documents\SAT242516081\obj\Debug\net8.0\ref\SAT242516081.dll
 C:\Users\ASUS\Documents\SAT242516081\obj\Debug\net8.0\SAT242516081.Resources.SharedResource.en.resources
 C:\Users\ASUS\Documents\SAT242516081\obj\Debug\net8.0\SAT242516081.Resources.SharedResource.tr.resources
 C:\Users\ASUS\Documents\SAT242516081\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\ASUS\Documents\SAT242516081\obj\Debug\net8.0\SAT242516081.sourcelink.json

@@ -9,8 +9,6 @@
 
   <ItemGroup>
     <None Remove=".dockerignore" />
-    <None Remove="docker-compose.yml" />
-    <None Remove="Dockerfile" />
   </ItemGroup>
 
   <ItemGroup>
