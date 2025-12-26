@@ -110,5 +110,28 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<SAT242516081.Data.ApplicationDbContext>();
+
+        try
+        {
+            context.Database.Migrate();
+        }
+        catch (Exception dbEx)
+        {
+        
+            Console.WriteLine("Veritabaný hatasý oldu ama yola devam ediliyor: " + dbEx.Message);
+        }
+    }
+}
+catch
+{
+}
+
 app.Run();
-//aa
+
